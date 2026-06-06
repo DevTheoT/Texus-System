@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusERP — Sistema de Gestão Retail</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="app">
+  <!-- ╔═══════════════ SIDEBAR ═══════════════╗ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">Nx</div>
+        <div>
+          <div class="logo-text">NexusERP</div>
+          <div class="logo-sub">v1.0 · RETAIL</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:8px 0;flex:1;overflow-y:auto">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('pdv')">
+        <span class="nav-icon">🖥️</span> PDV
+        <span class="nav-badge live-dot" id="badge-pdv" style="display:none">AO VIVO</span>
+      </div>
+
+      <div class="nav-section">Gestão</div>
+      <div class="nav-item" onclick="navigate('estoque')">
+        <span class="nav-icon">📦</span> Estoque
+        <span class="nav-badge" id="badge-estoque" style="display:none">!</span>
+      </div>
+      <div class="nav-item" onclick="navigate('produtos')">
+        <span class="nav-icon">🏷️</span> Produtos
+      </div>
+      <div class="nav-item" onclick="navigate('fornecedores')">
+        <span class="nav-icon">🤝</span> Fornecedores
+      </div>
+      <div class="nav-item" onclick="navigate('clientes')">
+        <span class="nav-icon">👥</span> Clientes
+      </div>
+
+      <div class="nav-section">Vendas</div>
+      <div class="nav-item" onclick="navigate('vendas')">
+        <span class="nav-icon">📋</span> Histórico
+      </div>
+      <div class="nav-item" onclick="navigate('ecommerce')">
+        <span class="nav-icon">🛒</span> E-commerce
+      </div>
+      <div class="nav-item" onclick="navigate('pedidos')">
+        <span class="nav-icon">📬</span> Pedidos
+        <span class="nav-badge" id="badge-pedidos">3</span>
+      </div>
+
+      <div class="nav-section">Configurações</div>
+      <div class="nav-item" onclick="navigate('editor')">
+        <span class="nav-icon">🎨</span> Editor do Site
+      </div>
+      <div class="nav-item" onclick="navigate('usuarios')">
+        <span class="nav-icon">🔐</span> Usuários
+      </div>
+      <div class="nav-item" onclick="navigate('nfe')">
+        <span class="nav-icon">📄</span> Importar NF-e
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">MA</div>
+        <div class="user-info">
+          <div class="user-name">Maria Admin</div>
+          <div class="user-role">Administrador</div>
+        </div>
+        <span style="color:var(--text3);font-size:12px">⚙️</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ╔═══════════════ MAIN CONTENT ═══════════════╗ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:5px 10px;flex:1;max-width:280px;margin-left:16px">
+        <span style="color:var(--text3);font-size:12px">🔍</span>
+        <input style="background:none;border:none;outline:none;color:var(--text);font-size:12px;width:100%;font-family:var(--font-body)" placeholder="Busca global: produtos, clientes, pedidos..." id="global-search" oninput="globalSearch(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);font-family:var(--font-mono)">
+          <span class="dot dot-green live-dot"></span> SISTEMA ONLINE
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showNotifications()">🔔 <span class="notif-dot"></span></button>
+        <button class="btn btn-primary btn-sm" onclick="navigate('pdv')">⚡ Abrir PDV</button>
+      </div>
+    </div>
+
+    <div class="content" id="content-area">
+
+      <!-- ══════════ PAGE: DASHBOARD ══════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="section-title">Visão Geral</div>
+        <div class="section-sub">Hoje, <span id="current-date"></span> — Atualizado em tempo real</div>
+
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="metric-card">
+            <div class="metric-label">Faturamento Hoje</div>
+            <div class="metric-value" id="m-faturamento">R$ 0</div>
+            <div class="metric-sub" id="m-fat-sub">0 vendas realizadas</div>
+            <div class="metric-trend trend-up" id="m-fat-trend">↑ 0%</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Ticket Médio</div>
+            <div class="metric-value" id="m-ticket">R$ 0</div>
+            <div class="metric-sub">Por transação</div>
+            <div class="metric-trend trend-up">↑ 12%</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Itens em Estoque</div>
+            <div class="metric-value" id="m-estoque">0</div>
+            <div class="metric-sub" id="m-est-sub">produtos cadastrados</div>
+            <div class="metric-trend" id="m-est-trend"></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pedidos Pendentes</div>
+            <div class="metric-value" id="m-pedidos">3</div>
+            <div class="metric-sub">Aguardando processamento</div>
+            <div class="metric-trend trend-down">⚠ Urgente</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card card-lg">
+            <div class="card-header">
+              <div class="card-title">Vendas por Hora — Hoje</div>
+              <span class="chip chip-green">🟢 Ao Vivo</span>
+            </div>
+            <div class="chart-bars" id="hourly-chart"></div>
+            <div class="chart-labels" id="hourly-labels"></div>
+          </div>
+          <div class="card card-lg">
+            <div class="card-header">
+              <div class="card-title">Alertas do Sistema</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('estoque')">Ver Todos</button>
+            </div>
+            <div id="alerts-container"></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Mais Vendidos Hoje</div>
+            </div>
+            <div id="top-products"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Últimas Vendas</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('vendas')">Ver Todas</button>
+            </div>
+            <div id="recent-sales"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: PDV ══════════ -->
+      <div class="page" id="page-pdv" style="padding:0;margin:-24px;height:calc(100vh - 52px)">
+        <div class="pdv-layout">
+          <!-- Produtos -->
+          <div class="pdv-products">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <input class="pdv-search" placeholder="🔍  Buscar produto, código de barras ou SKU..." id="pdv-search-input" oninput="filterPDVProducts(this.value)" autofocus>
+              <select style="width:140px;height:38px" onchange="filterPDVCategory(this.value)" id="pdv-cat-filter">
+                <option value="">Todas categorias</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)" id="pdv-product-count"></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)">
+                <span class="dot dot-green live-dot"></span> Caixa Aberto · Operador: <strong style="color:var(--text)">Maria Admin</strong>
+              </div>
+            </div>
+            <div class="product-grid" id="pdv-product-grid"></div>
+          </div>
+
+          <!-- Carrinho -->
+          <div class="pdv-cart">
+            <div class="cart-header">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="cart-title">🛒 Carrinho</div>
+                <button class="btn btn-ghost btn-sm" onclick="clearCart()">🗑 Limpar</button>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--font-mono)" id="cart-count">0 itens</div>
+            </div>
+
+            <div class="cart-items" id="cart-items-list">
+              <div class="empty-state">
+                <div class="empty-icon">🛒</div>
+                <div class="empty-text">Carrinho vazio<br>Clique em um produto para adicionar</div>
+              </div>
+            </div>
+
+            <div class="cart-footer">
+              <div style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;margin-bottom:10px">
+                <div class="cart-total-line">
+                  <span>Subtotal</span>
+                  <span id="cart-subtotal" style="font-family:var(--font-mono)">R$ 0,00</span>
+                </div>
+                <div class="cart-total-line">
+                  <span>Desconto</span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="discount-input" placeholder="0" style="width:50px;padding:2px 6px;font-size:11px;text-align:right" oninput="updateCartTotals()">
+                    <select id="discount-type" style="width:50px;padding:2px;font-size:11px" onchange="updateCartTotals()">
+                      <option value="pct">%</option>
+                      <option value="val">R$</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="cart-total-line total">
+                  <span>TOTAL</span>
+                  <span id="cart-total" style="font-family:var(--font-mono)">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div style="margin-bottom:8px">
+                <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-family:var(--font-mono)">FORMA DE PAGAMENTO</div>
+                <div class="payment-btns" id="payment-methods">
+                  <div class="pay-btn selected" onclick="selectPayment('dinheiro',this)">💵 Dinheiro</div>
+                  <div class="pay-btn" onclick="selectPayment('pix',this)">📱 PIX</div>
+                  <div class="pay-btn" onclick="selectPayment('debito',this)">💳 Débito</div>
+                  <div class="pay-btn" onclick="selectPayment('credito',this)">💳 Crédito</div>
+                </div>
+              </div>
+
+              <button class="checkout-btn" id="checkout-btn" onclick="finalizeSale()" disabled>
+                ⚡ Finalizar Venda — <span id="checkout-total">R$ 0,00</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: ESTOQUE ══════════ -->
+      <div class="page" id="page-estoque">
+        <div class="section-title">Gestão de Estoque</div>
+        <div class="section-sub">Controle em tempo real de todos os produtos</div>
+
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="metric-card">
+            <div class="metric-label">Total em Estoque</div>
+            <div class="metric-value" id="est-total-itens">0</div>
+            <div class="metric-sub">unidades</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Valor em Estoque</div>
+            <div class="metric-value" id="est-valor">R$ 0</div>
+            <div class="metric-sub">custo total</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Estoque Baixo</div>
+            <div class="metric-value" id="est-low" style="color:var(--amber)">0</div>
+            <div class="metric-sub">produtos abaixo do mínimo</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Sem Estoque</div>
+            <div class="metric-value" id="est-zero" style="color:var(--red)">0</div>
+            <div class="metric-sub">produtos esgotados</div>
+          </div>
+        </div>
+
+        <div class="tabs" id="estoque-tabs">
+          <button class="tab active" onclick="showEstoqueTab('lista',this)">📋 Lista de Produtos</button>
+          <button class="tab" onclick="showEstoqueTab('movimentacoes',this)">📈 Movimentações</button>
+          <button class="tab" onclick="showEstoqueTab('ajuste',this)">⚖️ Ajuste Manual</button>
+          <button class="tab" onclick="showEstoqueTab('alertas',this)">🚨 Alertas</button>
+        </div>
+
+        <!-- Lista -->
+        <div id="est-tab-lista">
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <input placeholder="🔍 Buscar produto..." style="flex:1" id="est-search" oninput="filterEstoque(this.value)">
+            <select id="est-filter-cat" onchange="filterEstoque()">
+              <option value="">Todas as Categorias</option>
+            </select>
+            <select id="est-filter-status" onchange="filterEstoque()">
+              <option value="">Todos os Status</option>
+              <option value="low">Estoque Baixo</option>
+              <option value="zero">Sem Estoque</option>
+              <option value="ok">Normal</option>
+            </select>
+            <button class="btn btn-primary" onclick="openAddProduct()">+ Novo Produto</button>
+          </div>
+          <div class="card" style="padding:0">
+            <div class="table-wrap">
+              <table id="estoque-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Produto</th>
+                    <th>SKU / Código</th>
+                    <th>Categoria</th>
+                    <th>Estoque</th>
+                    <th>Mínimo</th>
+                    <th>Status</th>
+                    <th>Custo</th>
+                    <th>Venda</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="estoque-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movimentações -->
+        <div id="est-tab-movimentacoes" style="display:none">
+          <div class="card" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data/Hora</th>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Qtd</th>
+                    <th>Saldo Anterior</th>
+                    <th>Saldo Atual</th>
+                    <th>Origem</th>
+                    <th>Operador</th>
+                  </tr>
+                </thead>
+                <tbody id="mov-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ajuste -->
+        <div id="est-tab-ajuste" style="display:none">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Entrada de Mercadoria</div>
+              <div class="form-group">
+                <label>Produto</label>
+                <select id="adj-product-in">
+                  <option value="">Selecionar produto...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="adj-qty-in" placeholder="0" min="1">
+              </div>
+              <div class="form-group">
+                <label>Motivo</label>
+                <select id="adj-reason-in">
+                  <option>Compra de fornecedor</option>
+                  <option>Devolução de cliente</option>
+                  <option>Ajuste de inventário</option>
+                  <option>Transferência</option>
+                  <option>Outro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Observação</label>
+                <input id="adj-obs-in" placeholder="Opcional...">
+              </div>
+              <button class="btn btn-success" style="width:100%" onclick="doStockEntry()">✅ Registrar Entrada</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Saída / Ajuste</div>
+              <div class="form-group">
+                <label>Produto</label>
+                <select id="adj-product-out">
+                  <option value="">Selecionar produto...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="adj-qty-out" placeholder="0" min="1">
+              </div>
+              <div class="form-group">
+                <label>Motivo</label>
+                <select id="adj-reason-out">
+                  <option>Avaria / Perda</option>
+                  <option>Uso interno</option>
+                  <option>Devolução a fornecedor</option>
+                  <option>Ajuste de inventário</option>
+                  <option>Outro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Observação</label>
+                <input id="adj-obs-out" placeholder="Opcional...">
+              </div>
+              <button class="btn btn-danger" style="width:100%" onclick="doStockExit()">⬇️ Registrar Saída</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas -->
+        <div id="est-tab-alertas" style="display:none">
+          <div id="alertas-lista"></div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: PRODUTOS ══════════ -->
+      <div class="page" id="page-produtos">
+        <div class="section-title">Cadastro de Produtos</div>
+        <div class="section-sub">Gerencie todo o catálogo de produtos</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input placeholder="🔍 Buscar produto..." style="flex:1" id="prod-search" oninput="filterProducts(this.value)">
+          <button class="btn btn-ghost" onclick="navigate('nfe')">📄 Importar NF-e</button>
+          <button class="btn btn-primary" onclick="openAddProduct()">+ Novo Produto</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Nome</th>
+                  <th>Código Interno</th>
+                  <th>Código de Barras</th>
+                  <th>Categoria</th>
+                  <th>Marca</th>
+                  <th>Custo</th>
+                  <th>Venda</th>
+                  <th>Margem</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="produtos-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: VENDAS ══════════ -->
+      <div class="page" id="page-vendas">
+        <div class="section-title">Histórico de Vendas</div>
+        <div class="section-sub">Todas as transações realizadas</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input placeholder="🔍 Buscar venda, cliente..." style="flex:1">
+          <select style="width:160px">
+            <option>Todas as formas</option>
+            <option>Dinheiro</option>
+            <option>PIX</option>
+            <option>Débito</option>
+            <option>Crédito</option>
+          </select>
+          <input type="date" style="width:150px">
+          <input type="date" style="width:150px">
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Data/Hora</th>
+                  <th>Itens</th>
+                  <th>Subtotal</th>
+                  <th>Desconto</th>
+                  <th>Total</th>
+                  <th>Pagamento</th>
+                  <th>Operador</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="vendas-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: ECOMMERCE ══════════ -->
+      <div class="page" id="page-ecommerce">
+        <div class="section-title">E-commerce</div>
+        <div class="section-sub">Loja virtual integrada ao estoque em tempo real</div>
+        <div class="tabs">
+          <button class="tab active" onclick="showEcomTab('loja',this)">🛒 Loja</button>
+          <button class="tab" onclick="showEcomTab('pedidos-online',this)">📬 Pedidos Online</button>
+          <button class="tab" onclick="showEcomTab('clientes-online',this)">👤 Clientes</button>
+          <button class="tab" onclick="showEcomTab('config-loja',this)">⚙️ Configurações</button>
+        </div>
+
+        <div id="ecom-tab-loja">
+          <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
+            <input placeholder="🔍 Buscar na loja..." style="flex:1" id="ecom-search" oninput="filterEcom(this.value)">
+            <select id="ecom-cat" onchange="filterEcom()">
+              <option value="">Todas Categorias</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--text3)">
+              🟢 Loja Online · <strong style="color:var(--green)">ATIVA</strong>
+            </div>
+          </div>
+          <div class="shop-grid" id="shop-grid"></div>
+        </div>
+
+        <div id="ecom-tab-pedidos-online" style="display:none">
+          <div class="card" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="pedidos-online-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="ecom-tab-clientes-online" style="display:none">
+          <div id="clientes-list"></div>
+        </div>
+
+        <div id="ecom-tab-config-loja" style="display:none">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Configurações da Loja</div>
+              <div class="form-group">
+                <label>Nome da Loja</label>
+                <input value="NexusStore" id="shop-name">
+              </div>
+              <div class="form-group">
+                <label>Slogan</label>
+                <input value="Qualidade que você confia" id="shop-slogan">
+              </div>
+              <div class="form-group">
+                <label>Frete Fixo (R$)</label>
+                <input type="number" value="15" id="shop-frete">
+              </div>
+              <div class="form-group">
+                <label>Frete Grátis acima de (R$)</label>
+                <input type="number" value="150" id="shop-free-frete">
+              </div>
+              <button class="btn btn-primary" style="margin-top:4px" onclick="toast('Configurações salvas!','success')">Salvar</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Cores e Aparência</div>
+              <div class="form-group">
+                <label>Cor Principal</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="color" value="#5B6BFF" style="width:50px;height:34px;padding:2px;cursor:pointer">
+                  <input value="#5B6BFF" style="flex:1;font-family:var(--font-mono)">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Cor Secundária</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="color" value="#22D07A" style="width:50px;height:34px;padding:2px;cursor:pointer">
+                  <input value="#22D07A" style="flex:1;font-family:var(--font-mono)">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Banner Principal</label>
+                <input placeholder="URL da imagem do banner...">
+              </div>
+              <button class="btn btn-primary" style="margin-top:4px" onclick="toast('Aparência atualizada!','success')">Aplicar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: PEDIDOS ══════════ -->
+      <div class="page" id="page-pedidos">
+        <div class="section-title">Central de Pedidos</div>
+        <div class="section-sub">Pedidos do e-commerce aguardando processamento</div>
+        <div id="pedidos-kanban" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px"></div>
+      </div>
+
+      <!-- ══════════ PAGE: FORNECEDORES ══════════ -->
+      <div class="page" id="page-fornecedores">
+        <div class="section-title">Fornecedores</div>
+        <div class="section-sub">Gestão de fornecedores e vínculos com produtos</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="openAddSupplier()">+ Novo Fornecedor</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>CNPJ</th>
+                  <th>Contato</th>
+                  <th>Email</th>
+                  <th>Produtos</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="fornec-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: CLIENTES ══════════ -->
+      <div class="page" id="page-clientes">
+        <div class="section-title">Clientes</div>
+        <div class="section-sub">Base de clientes cadastrados</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input placeholder="🔍 Buscar cliente..." style="flex:1" id="cli-search" oninput="filterClientes(this.value)">
+          <button class="btn btn-primary" onclick="openAddClient()">+ Novo Cliente</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>CPF/CNPJ</th>
+                  <th>Email</th>
+                  <th>Telefone</th>
+                  <th>Cidade</th>
+                  <th>Compras</th>
+                  <th>Total Gasto</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="clientes-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: EDITOR ══════════ -->
+      <div class="page" id="page-editor">
+        <div class="section-title">Editor Visual do Site</div>
+        <div class="section-sub">Personalize sua loja sem código — arraste, solte e edite</div>
+        <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;height:calc(100vh - 200px)">
+          <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--bg3)">
+              <button class="btn btn-ghost btn-sm" onclick="toast('Pré-visualização aberta!','info')">👁 Preview</button>
+              <button class="btn btn-ghost btn-sm" onclick="toast('Publicando alterações...','info')">🌐 Publicar</button>
+              <button class="btn btn-primary btn-sm" onclick="toast('Alterações salvas!','success')">💾 Salvar</button>
+              <div style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--font-mono)">
+                MODO: DESKTOP
+              </div>
+            </div>
+            <div style="flex:1;overflow:auto;background:#f0f0f0;padding:20px">
+              <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.15);max-width:900px;margin:0 auto" id="site-preview-area">
+                <!-- Preview do site -->
+                <div id="site-header-preview" style="background:#5B6BFF;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800" id="prev-shopname">NexusStore</div>
+                  <div style="display:flex;gap:16px;font-size:13px">
+                    <span>Início</span><span>Produtos</span><span>Sobre</span><span>Contato</span>
+                  </div>
+                  <div>🛒 (0)</div>
+                </div>
+                <div id="site-banner-preview" style="height:180px;background:linear-gradient(135deg,#5B6BFF,#22D07A);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+                  <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff" id="prev-slogan">Qualidade que você confia</div>
+                  <div style="background:#fff;color:#5B6BFF;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Ver Produtos →</div>
+                </div>
+                <div style="padding:20px">
+                  <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:12px;color:#111">🔥 Produtos em Destaque</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="prev-products-grid"></div>
+                </div>
+                <div style="background:#f8f8f8;padding:16px 24px;text-align:center;font-size:11px;color:#999;border-top:1px solid #eee">
+                  © 2024 NexusStore · Todos os direitos reservados
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Editor Panel -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow-y:auto;padding:14px">
+            <div style="font-size:11px;font-weight:600;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:14px">EDITOR DE SEÇÕES</div>
+
+            <div class="form-group">
+              <label>Nome da Loja</label>
+              <input id="editor-shopname" value="NexusStore" oninput="document.getElementById('prev-shopname').textContent=this.value">
+            </div>
+            <div class="form-group">
+              <label>Slogan do Banner</label>
+              <input id="editor-slogan" value="Qualidade que você confia" oninput="document.getElementById('prev-slogan').textContent=this.value">
+            </div>
+            <div class="form-group">
+              <label>Cor Principal</label>
+              <input type="color" value="#5B6BFF" style="width:100%;height:36px" oninput="document.getElementById('site-header-preview').style.background=this.value;document.getElementById('site-banner-preview').style.background=this.value">
+            </div>
+
+            <hr class="divider">
+            <div style="font-size:11px;font-weight:600;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:10px">SEÇÕES DA PÁGINA</div>
+
+            <div style="display:flex;flex-direction:column;gap:6px" id="section-list">
+              <div class="editor-section-item" draggable="true" data-sec="header" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Cabeçalho</span>
+                <span class="chip chip-green" style="margin-left:auto">Ativo</span>
+              </div>
+              <div class="editor-section-item" draggable="true" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Banner Hero</span>
+                <span class="chip chip-green" style="margin-left:auto">Ativo</span>
+              </div>
+              <div class="editor-section-item" draggable="true" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Produtos em Destaque</span>
+                <span class="chip chip-green" style="margin-left:auto">Ativo</span>
+              </div>
+              <div class="editor-section-item" draggable="true" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Categorias</span>
+                <span class="chip chip-amber" style="margin-left:auto">Oculto</span>
+              </div>
+              <div class="editor-section-item" draggable="true" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Newsletter</span>
+                <span class="chip chip-amber" style="margin-left:auto">Oculto</span>
+              </div>
+              <div class="editor-section-item" draggable="true" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;cursor:grab;display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--text3)">⠿</span> <span>Rodapé</span>
+                <span class="chip chip-green" style="margin-left:auto">Ativo</span>
+              </div>
+            </div>
+
+            <hr class="divider">
+            <button class="btn btn-ghost" style="width:100%;margin-bottom:6px" onclick="toast('Nova seção adicionada!','success')">+ Adicionar Seção</button>
+            <button class="btn btn-primary" style="width:100%" onclick="toast('Site publicado com sucesso! 🚀','success')">🌐 Publicar Site</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: USUARIOS ══════════ -->
+      <div class="page" id="page-usuarios">
+        <div class="section-title">Controle de Usuários</div>
+        <div class="section-sub">Gerencie acessos e permissões do sistema</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="openAddUser()">+ Novo Usuário</button>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Email</th>
+                    <th>Perfil</th>
+                    <th>Último Acesso</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Perfis de Acesso</div>
+            <div style="display:flex;flex-direction:column;gap:12px" id="perfis-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: NF-e ══════════ -->
+      <div class="page" id="page-nfe">
+        <div class="section-title">Importar NF-e</div>
+        <div class="section-sub">Leitura de XML de Nota Fiscal Eletrônica para atualização automática de estoque</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Upload do XML</div>
+            <div style="border:2px dashed var(--border2);border-radius:var(--r2);padding:40px;text-align:center;margin-bottom:14px;cursor:pointer;transition:all .15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border2)'" onclick="document.getElementById('nfe-file').click()">
+              <div style="font-size:48px;margin-bottom:8px">📄</div>
+              <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">Arraste o XML aqui</div>
+              <div style="font-size:12px;color:var(--text3)">ou clique para selecionar o arquivo</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--font-mono)">Formato: .xml (NF-e padrão SEFAZ)</div>
+            </div>
+            <input type="file" id="nfe-file" accept=".xml" style="display:none" onchange="handleNFeUpload(this)">
+            <div class="alert alert-info">
+              ℹ️ O sistema lerá automaticamente os produtos, atualizará o estoque e vinculará ao fornecedor.
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="simulateNFeImport()">🔄 Simular Importação de Demo</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Últimas Importações</div>
+            <div id="nfe-history"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════ MODAL: PRODUTO ══════════ -->
+<div class="modal-overlay" id="modal-produto">
+  <div class="modal">
+    <div class="modal-title" id="modal-produto-title">Novo Produto</div>
+    <input type="hidden" id="edit-product-id">
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Nome do Produto *</label>
+        <input id="p-nome" placeholder="Ex: Camiseta Básica Preta">
+      </div>
+      <div class="form-group">
+        <label>Emoji / Ícone</label>
+        <input id="p-emoji" placeholder="Ex: 👕" maxlength="2">
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Código Interno</label>
+        <input id="p-codigo" placeholder="Ex: PROD-001">
+      </div>
+      <div class="form-group">
+        <label>Código de Barras</label>
+        <input id="p-barcode" placeholder="Ex: 7891234567890">
+      </div>
+      <div class="form-group">
+        <label>SKU</label>
+        <input id="p-sku" placeholder="Ex: CAM-BAS-P-BLK">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Categoria *</label>
+        <select id="p-categoria">
+          <option>Roupas</option>
+          <option>Calçados</option>
+          <option>Acessórios</option>
+          <option>Eletrônicos</option>
+          <option>Alimentos</option>
+          <option>Beleza</option>
+          <option>Casa</option>
+          <option>Esporte</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Marca</label>
+        <input id="p-marca" placeholder="Ex: Nike, Apple...">
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Preço de Custo (R$) *</label>
+        <input type="number" id="p-custo" placeholder="0,00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Preço de Venda (R$) *</label>
+        <input type="number" id="p-venda" placeholder="0,00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Margem</label>
+        <input id="p-margem" readonly style="color:var(--green);background:var(--bg)" placeholder="—">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Estoque Inicial</label>
+        <input type="number" id="p-estoque" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Estoque Mínimo</label>
+        <input type="number" id="p-minimo" placeholder="5" min="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea id="p-descricao" rows="2" placeholder="Descrição do produto..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: RECIBO ══════════ -->
+<div class="modal-overlay" id="modal-recibo">
+  <div class="modal" style="max-width:360px">
+    <div class="receipt" id="receipt-content"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-recibo')">Fechar</button>
+      <button class="btn btn-primary" style="flex:1" onclick="printReceipt()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: ADD USER ══════════ -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-title">Novo Usuário</div>
+    <div class="form-group"><label>Nome Completo</label><input id="u-nome" placeholder="João Silva"></div>
+    <div class="form-group"><label>Email</label><input id="u-email" type="email" placeholder="joao@empresa.com"></div>
+    <div class="form-group"><label>Senha</label><input id="u-senha" type="password" placeholder="••••••••"></div>
+    <div class="form-group"><label>Perfil de Acesso</label>
+      <select id="u-perfil">
+        <option value="admin">Administrador</option>
+        <option value="gerente">Gerente</option>
+        <option value="caixa">Operador de Caixa</option>
+        <option value="estoquista">Estoquista</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Criar Usuário</button>
+    </div>
+    <script src="./script.js"></script>
+</div>
+
+<!-- ══════════ TOAST CONTAINER ══════════ -->
+<div id="toast-container"></div>
+</body>
+</html>
